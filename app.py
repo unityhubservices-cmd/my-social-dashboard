@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from datetime import datetime
 
 # -----------------------------------------------------------------------------
-# 1. PAGE SETUP (Must be the first command)
+# 1. PAGE SETUP
 # -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="Digital Control Centre",
@@ -15,77 +15,140 @@ st.set_page_config(
 )
 
 # -----------------------------------------------------------------------------
-# 2. DESIGN ENGINE (CSS for Navy Blue Theme)
+# 2. THEME LOGIC (Light vs Dark)
 # -----------------------------------------------------------------------------
-st.markdown("""
+# Check current theme in session state
+if 'theme' not in st.session_state:
+    st.session_state.theme = 'Light' # Default is Light as per your request
+
+# Sidebar Toggle Logic
+with st.sidebar:
+    st.image("https://cdn-icons-png.flaticon.com/512/906/906343.png", width=40)
+    st.markdown("### ⚙️ View Settings")
+    
+    # Toggle Button
+    theme_selection = st.radio(
+        "Theme Mode:", 
+        ["Light", "Dark"], 
+        index=0 if st.session_state.theme == 'Light' else 1,
+        horizontal=True
+    )
+    
+    # Update state if changed
+    if theme_selection != st.session_state.theme:
+        st.session_state.theme = theme_selection
+        st.rerun() # Force reload to apply CSS
+
+# Define Colors based on Theme
+if st.session_state.theme == 'Light':
+    main_bg_color = "#F5F7FA" # Soft White/Grey
+    text_color = "#021b3d"    # Dark Blue Text
+    card_bg = "white"
+    card_shadow = "0 4px 6px rgba(0,0,0,0.1)"
+    card_border = "#E0E0E0"
+    chart_text_color = "black"
+else:
+    main_bg_color = "#042f66" # Deep Blue
+    text_color = "white"
+    card_bg = "linear-gradient(145deg, #004080, #003366)"
+    card_shadow = "0 4px 8px rgba(0,0,0,0.4)"
+    card_border = "#00a8cc"
+    chart_text_color = "white"
+
+# -----------------------------------------------------------------------------
+# 3. DYNAMIC CSS (Injecting Colors)
+# -----------------------------------------------------------------------------
+st.markdown(f"""
     <style>
-    /* 1. Main Background - Deep Navy Blue */
-    .stApp {
-        background-color: #042f66;
-        color: white;
-    }
+    /* 1. Main Background (Changes based on toggle) */
+    .stApp {{
+        background-color: {main_bg_color};
+        color: {text_color};
+    }}
 
-    /* 2. Sidebar Background */
-    [data-testid="stSidebar"] {
+    /* 2. Sidebar Background (ALWAYS BLUE) */
+    [data-testid="stSidebar"] {{
         background-color: #021b3d;
-        border-right: 2px solid #FFD700; /* Gold Line */
-    }
+        border-right: 2px solid #FFD700;
+    }}
+    /* Sidebar text always white */
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] label {{
+        color: white !important;
+    }}
 
-    /* 3. Top Header Bar */
-    .top-bar {
+    /* 3. Top Header Bar (ALWAYS BLUE) */
+    .top-bar {{
         background-color: #021b3d;
         padding: 15px 20px;
         border-radius: 12px;
         margin-bottom: 25px;
-        border-bottom: 2px solid #00a8cc; /* Cyan Line */
+        border-bottom: 3px solid #00a8cc;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    }
-    .header-title {
-        font-size: 22px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }}
+    .header-title {{
+        font-size: 24px;
         font-weight: 900;
         color: white;
         text-transform: uppercase;
         letter-spacing: 1.5px;
-    }
-    .header-pill {
-        background-color: white;
-        color: #042f66;
+    }}
+    
+    /* Pills inside header */
+    .header-pill {{
+        background-color: rgba(255,255,255,0.1);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.2);
         padding: 6px 15px;
         border-radius: 20px;
-        font-weight: bold;
+        font-weight: 600;
         font-size: 13px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
+    }}
 
-    /* 4. KPI Cards Styling */
-    .kpi-card {
-        background: linear-gradient(145deg, #004080, #003366);
+    /* 4. KPI Cards Styling (Dynamic) */
+    .kpi-card {{
+        background: {card_bg};
         padding: 20px;
-        border-radius: 10px;
+        border-radius: 12px;
         text-align: center;
-        border: 1px solid #00a8cc;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        border: 1px solid {card_border};
+        box-shadow: {card_shadow};
         margin-bottom: 10px;
-    }
-    .kpi-label { font-size: 14px; color: #b0c4de; margin-bottom: 5px; text-transform: uppercase; }
-    .kpi-val { font-size: 36px; font-weight: 800; color: white; margin: 0; }
-    .kpi-arrow { color: #00ff00; font-size: 14px; font-weight: bold; }
+        transition: transform 0.2s;
+    }}
+    .kpi-card:hover {{ transform: translateY(-5px); }}
+    
+    .kpi-label {{ 
+        font-size: 14px; 
+        color: {'#666' if st.session_state.theme == 'Light' else '#b0c4de'}; 
+        margin-bottom: 5px; 
+        text-transform: uppercase; 
+        font-weight: bold;
+    }}
+    .kpi-val {{ 
+        font-size: 36px; 
+        font-weight: 800; 
+        color: {'#021b3d' if st.session_state.theme == 'Light' else 'white'}; 
+        margin: 0; 
+    }}
+    .kpi-arrow {{ color: #00C851; font-size: 14px; font-weight: bold; }}
 
-    /* 5. General Text Fixes */
-    h1, h2, h3, p, label { color: white !important; }
-    .stSelectbox div[data-baseweb="select"] > div {
-        background-color: #021b3d !important;
-        color: white !important;
-        border: 1px solid #00a8cc;
-    }
+    /* 5. Headings & Text Colors */
+    h1, h2, h3, h4, p {{ color: {text_color} !important; }}
+    
+    /* Selectbox Styling */
+    .stSelectbox div[data-baseweb="select"] > div {{
+        background-color: {'white' if st.session_state.theme == 'Light' else '#021b3d'} !important;
+        color: {text_color} !important;
+        border: 1px solid #ccc;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
-# 3. TOP HEADER (Title + Time)
+# 4. HEADER SECTION
 # -----------------------------------------------------------------------------
 current_time = datetime.now().strftime("%I:%M %p | %d %b")
 
@@ -100,10 +163,10 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
-# 4. SIDEBAR MENU
+# 5. SIDEBAR MENU (Remaining items)
 # -----------------------------------------------------------------------------
 with st.sidebar:
-    st.markdown("### 👤 Admin Panel")
+    st.markdown("---")
     selected = st.radio(
         "Navigate", 
         ["Home Dashboard", "Analytics", "Goals / Targets", "Settings"],
@@ -113,7 +176,7 @@ with st.sidebar:
     st.info("System Status: 🟢 Online")
 
 # -----------------------------------------------------------------------------
-# 5. DASHBOARD CONTENT
+# 6. DASHBOARD CONTENT
 # -----------------------------------------------------------------------------
 
 # Filters Row
@@ -154,27 +217,40 @@ with col_pie:
     st.markdown("##### Audience Split")
     labels = ['YouTube', 'Pinterest', 'Facebook', 'Blogger']
     values = [45, 25, 20, 10]
+    
     fig_pie = go.Figure(data=[go.Pie(
-        labels=labels, values=values, hole=0,
+        labels=labels, values=values, hole=0.5,
         marker_colors=['#FF4B4B', '#FFD700', '#00A8CC', '#1E90FF']
     )])
     fig_pie.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(color='white'), margin=dict(t=0, b=0, l=0, r=0), height=300,
-        showlegend=True, legend=dict(orientation="h", y=-0.1)
+        paper_bgcolor='rgba(0,0,0,0)', 
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color=chart_text_color), # Dynamic Color
+        margin=dict(t=20, b=20, l=0, r=0), 
+        height=300,
+        showlegend=True, 
+        legend=dict(orientation="h", y=-0.2)
     )
     st.plotly_chart(fig_pie, use_container_width=True)
 
 # Bar Chart (Right)
 with col_bar:
-    st.markdown("##### Total Growth (Cyan Mode)")
+    st.markdown("##### Total Growth")
     # Dummy Data
     bar_data = pd.DataFrame({'Day': [1,2,3,4,5,6,7], 'Growth': [10, 15, 8, 22, 18, 25, 30]})
+    
     fig_bar = px.bar(bar_data, x='Day', y='Growth')
-    fig_bar.update_traces(marker_color='#00e5ff') # Cyan Neon Color
+    # Light Mode mein Blue bars, Dark mode mein Cyan neon bars
+    bar_color = '#021b3d' if st.session_state.theme == 'Light' else '#00e5ff'
+    
+    fig_bar.update_traces(marker_color=bar_color, borderradius=5)
     fig_bar.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(color='white'), margin=dict(t=0, b=0, l=0, r=0), height=300,
-        xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor='#333')
+        paper_bgcolor='rgba(0,0,0,0)', 
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color=chart_text_color), # Dynamic Color
+        margin=dict(t=20, b=20, l=0, r=0), 
+        height=300,
+        xaxis=dict(showgrid=False), 
+        yaxis=dict(showgrid=True, gridcolor='#eee' if st.session_state.theme == 'Light' else '#333')
     )
     st.plotly_chart(fig_bar, use_container_width=True)
