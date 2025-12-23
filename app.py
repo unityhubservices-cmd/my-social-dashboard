@@ -1,256 +1,135 @@
 import streamlit as st
-import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
+import plotly.express as px
 from datetime import datetime
 
 # -----------------------------------------------------------------------------
-# 1. PAGE SETUP
+# 1. PYTHON LOGIC (Backend - Yahan Data Process Hoga)
 # -----------------------------------------------------------------------------
-st.set_page_config(
-    page_title="Digital Control Centre",
-    page_icon="🎛️",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(layout="wide", page_title="Control Centre")
+
+# Yahan aap Python ka koi bhi jadoo kar sakte hain (API call, Database, AI)
+current_time = datetime.now().strftime("%I:%M %p | %d %b")
+total_earnings = 500
+total_views = "14.6 K"
+total_subs = "7.93 K"
+
+# Python Logic for Charts
+labels = ['YouTube', 'Pinterest', 'Facebook', 'Blogger']
+values = [45, 25, 20, 10]
+fig_pie = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.5, 
+    marker_colors=['#FF4B4B', '#FFD700', '#00A8CC', '#1E90FF'])])
+fig_pie.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', 
+    font=dict(color='white'), margin=dict(t=0, b=0, l=0, r=0), height=250, showlegend=False)
+
+fig_bar = px.bar(x=[1,2,3,4,5], y=[10,15,8,22,18])
+fig_bar.update_traces(marker_color='#00e5ff')
+fig_bar.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', 
+    font=dict(color='white'), margin=dict(t=0, b=0, l=0, r=0), height=250, xaxis=dict(showgrid=False), yaxis=dict(gridcolor='#333'))
+
 
 # -----------------------------------------------------------------------------
-# 2. THEME LOGIC (Light vs Dark)
+# 2. HTML & CSS DESIGN (Frontend - Full Control)
 # -----------------------------------------------------------------------------
-# Check current theme in session state
-if 'theme' not in st.session_state:
-    st.session_state.theme = 'Light' # Default is Light as per your request
-
-# Sidebar Toggle Logic
-with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/906/906343.png", width=40)
-    st.markdown("### ⚙️ View Settings")
-    
-    # Toggle Button
-    theme_selection = st.radio(
-        "Theme Mode:", 
-        ["Light", "Dark"], 
-        index=0 if st.session_state.theme == 'Light' else 1,
-        horizontal=True
-    )
-    
-    # Update state if changed
-    if theme_selection != st.session_state.theme:
-        st.session_state.theme = theme_selection
-        st.rerun() # Force reload to apply CSS
-
-# Define Colors based on Theme
-if st.session_state.theme == 'Light':
-    main_bg_color = "#F5F7FA" # Soft White/Grey
-    text_color = "#021b3d"    # Dark Blue Text
-    card_bg = "white"
-    card_shadow = "0 4px 6px rgba(0,0,0,0.1)"
-    card_border = "#E0E0E0"
-    chart_text_color = "black"
-else:
-    main_bg_color = "#042f66" # Deep Blue
-    text_color = "white"
-    card_bg = "linear-gradient(145deg, #004080, #003366)"
-    card_shadow = "0 4px 8px rgba(0,0,0,0.4)"
-    card_border = "#00a8cc"
-    chart_text_color = "white"
-
-# -----------------------------------------------------------------------------
-# 3. DYNAMIC CSS (Injecting Colors)
-# -----------------------------------------------------------------------------
-st.markdown(f"""
-    <style>
-    /* 1. Main Background (Changes based on toggle) */
-    .stApp {{
-        background-color: {main_bg_color};
-        color: {text_color};
+# Dekhein kaise maine Python variables ({current_time}, {total_earnings}) ko HTML mein ghusaya hai
+html_code = f"""
+<style>
+    /* Aapka Custom CSS - Jahan marzi pixel set karein */
+    .main-container {{
+        background-color: #042f66;
+        padding: 20px;
+        border-radius: 15px;
+        color: white;
+        font-family: sans-serif;
     }}
-
-    /* 2. Sidebar Background (ALWAYS BLUE) */
-    [data-testid="stSidebar"] {{
-        background-color: #021b3d;
-        border-right: 2px solid #FFD700;
-    }}
-    /* Sidebar text always white */
-    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] label {{
-        color: white !important;
-    }}
-
-    /* 3. Top Header Bar (ALWAYS BLUE) */
-    .top-bar {{
-        background-color: #021b3d;
-        padding: 15px 20px;
-        border-radius: 12px;
-        margin-bottom: 25px;
-        border-bottom: 3px solid #00a8cc;
+    .header {{
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        background: #021b3d;
+        padding: 15px;
+        border-radius: 10px;
+        border-bottom: 3px solid #00a8cc;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }}
-    .header-title {{
-        font-size: 24px;
-        font-weight: 900;
-        color: white;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-    }}
+    .title {{ font-size: 24px; font-weight: 900; letter-spacing: 1px; }}
+    .pill {{ background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; font-size: 13px; }}
     
-    /* Pills inside header */
-    .header-pill {{
-        background-color: rgba(255,255,255,0.1);
-        color: white;
-        border: 1px solid rgba(255,255,255,0.2);
-        padding: 6px 15px;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 13px;
+    /* KPI Cards Styling */
+    .grid-container {{
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
     }}
-
-    /* 4. KPI Cards Styling (Dynamic) */
-    .kpi-card {{
-        background: {card_bg};
+    .card {{
+        background: linear-gradient(145deg, #004080, #003366);
         padding: 20px;
         border-radius: 12px;
         text-align: center;
-        border: 1px solid {card_border};
-        box-shadow: {card_shadow};
-        margin-bottom: 10px;
-        transition: transform 0.2s;
+        border: 1px solid #00a8cc;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.4);
     }}
-    .kpi-card:hover {{ transform: translateY(-5px); }}
-    
-    .kpi-label {{ 
-        font-size: 14px; 
-        color: {'#666' if st.session_state.theme == 'Light' else '#b0c4de'}; 
-        margin-bottom: 5px; 
-        text-transform: uppercase; 
-        font-weight: bold;
-    }}
-    .kpi-val {{ 
-        font-size: 36px; 
-        font-weight: 800; 
-        color: {'#021b3d' if st.session_state.theme == 'Light' else 'white'}; 
-        margin: 0; 
-    }}
-    .kpi-arrow {{ color: #00C851; font-size: 14px; font-weight: bold; }}
+    .card:hover {{ transform: translateY(-5px); transition: 0.3s; }}
+    .card h3 {{ color: #b0c4de; font-size: 14px; text-transform: uppercase; margin: 0; }}
+    .card h1 {{ color: white; font-size: 36px; font-weight: 800; margin: 10px 0; }}
+    .arrow {{ color: #00ff00; font-weight: bold; font-size: 14px; }}
 
-    /* 5. Headings & Text Colors */
-    h1, h2, h3, h4, p {{ color: {text_color} !important; }}
-    
-    /* Selectbox Styling */
-    .stSelectbox div[data-baseweb="select"] > div {{
-        background-color: {'white' if st.session_state.theme == 'Light' else '#021b3d'} !important;
-        color: {text_color} !important;
-        border: 1px solid #ccc;
-    }}
+</style>
+
+<div class="main-container">
+    <div class="header">
+        <div class="title">DIGITAL CONTROL CENTRE</div>
+        <div style="display: flex; gap: 10px;">
+            <div class="pill">💡 Hustle Hard</div>
+            <div class="pill">🕒 {current_time}</div> </div>
+    </div>
+
+    <div class="grid-container">
+        <div class="card">
+            <h3>Total Earnings</h3>
+            <h1>${total_earnings}</h1> <span class="arrow">⬆ $50 Today</span>
+        </div>
+        <div class="card">
+            <h3>Total Views</h3>
+            <h1>{total_views}</h1> <span class="arrow">⬆ +1.2K New</span>
+        </div>
+        <div class="card">
+            <h3>Total Followers</h3>
+            <h1>{total_subs}</h1> <span class="arrow">⬆ +120 Subs</span>
+        </div>
+    </div>
+</div>
+"""
+
+# -----------------------------------------------------------------------------
+# 3. RENDERING (Milaap)
+# -----------------------------------------------------------------------------
+
+# 1. Pehle Background set karein
+st.markdown("""
+    <style>
+        .stApp { background-color: #042f66; } /* Background Color Fix */
+        .block-container { padding-top: 1rem; padding-bottom: 0rem; } /* Padding remove */
+        header { visibility: hidden; } /* Streamlit ka default header chupana */
     </style>
 """, unsafe_allow_html=True)
 
-# -----------------------------------------------------------------------------
-# 4. HEADER SECTION
-# -----------------------------------------------------------------------------
-current_time = datetime.now().strftime("%I:%M %p | %d %b")
-
-st.markdown(f"""
-    <div class="top-bar">
-        <div class="header-title">Digital Control Centre</div>
-        <div style="display: flex; gap: 10px;">
-            <div class="header-pill">💡 Hustle Hard</div>
-            <div class="header-pill">🕒 {current_time}</div>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
-
-# -----------------------------------------------------------------------------
-# 5. SIDEBAR MENU (Remaining items)
-# -----------------------------------------------------------------------------
+# 2. Sidebar (Streamlit ka hi use karein kyunke wo functional hai)
 with st.sidebar:
-    st.markdown("---")
-    selected = st.radio(
-        "Navigate", 
-        ["Home Dashboard", "Analytics", "Goals / Targets", "Settings"],
-        label_visibility="collapsed"
-    )
-    st.write("---")
-    st.info("System Status: 🟢 Online")
+    st.title("Admin Panel")
+    st.radio("Menu", ["Dashboard", "Analytics", "Settings"])
 
-# -----------------------------------------------------------------------------
-# 6. DASHBOARD CONTENT
-# -----------------------------------------------------------------------------
+# 3. Apna HTML Design Render karein
+st.markdown(html_code, unsafe_allow_html=True)
 
-# Filters Row
-c1, c2, c3 = st.columns([3, 1, 1])
+# 4. Charts (HTML mein Charts banana mushkil hai, isliye Charts hum Streamlit ke use karenge)
+# Hum Columns bana kar charts ko HTML ke neeche adjust kar denge
+c1, c2 = st.columns([1, 2])
 with c1:
-    st.subheader("Monthly Stats Dashboard")
-with c2:
-    st.selectbox("Platform", ["All Platforms", "YouTube", "Instagram"], label_visibility="collapsed")
-with c3:
-    st.selectbox("Duration", ["This Month", "Last Month"], label_visibility="collapsed")
-
-# KPI Cards Row
-k1, k2, k3 = st.columns(3)
-
-def kpi(title, val, growth):
-    return f"""
-    <div class="kpi-card">
-        <div class="kpi-label">{title}</div>
-        <div class="kpi-val">{val}</div>
-        <div class="kpi-arrow">⬆ {growth}</div>
-    </div>
-    """
-
-with k1:
-    st.markdown(kpi("Total Earnings", "$500", "$50 Today"), unsafe_allow_html=True)
-with k2:
-    st.markdown(kpi("Total Views", "14.6 K", "+1.2K New"), unsafe_allow_html=True)
-with k3:
-    st.markdown(kpi("Total Followers", "7.93 K", "+120 Subs"), unsafe_allow_html=True)
-
-st.write("---")
-
-# Charts Row
-col_pie, col_bar = st.columns([1, 2])
-
-# Pie Chart (Left)
-with col_pie:
-    st.markdown("##### Audience Split")
-    labels = ['YouTube', 'Pinterest', 'Facebook', 'Blogger']
-    values = [45, 25, 20, 10]
-    
-    fig_pie = go.Figure(data=[go.Pie(
-        labels=labels, values=values, hole=0.5,
-        marker_colors=['#FF4B4B', '#FFD700', '#00A8CC', '#1E90FF']
-    )])
-    fig_pie.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)', 
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(color=chart_text_color), # Dynamic Color
-        margin=dict(t=20, b=20, l=0, r=0), 
-        height=300,
-        showlegend=True, 
-        legend=dict(orientation="h", y=-0.2)
-    )
+    st.markdown("<h3 style='color:white; text-align:center;'>Audience Split</h3>", unsafe_allow_html=True)
     st.plotly_chart(fig_pie, use_container_width=True)
-
-# Bar Chart (Right)
-with col_bar:
-    st.markdown("##### Total Growth")
-    # Dummy Data
-    bar_data = pd.DataFrame({'Day': [1,2,3,4,5,6,7], 'Growth': [10, 15, 8, 22, 18, 25, 30]})
-    
-    fig_bar = px.bar(bar_data, x='Day', y='Growth')
-    # Light Mode mein Blue bars, Dark mode mein Cyan neon bars
-    bar_color = '#021b3d' if st.session_state.theme == 'Light' else '#00e5ff'
-    
-    fig_bar.update_traces(marker_color=bar_color, borderradius=5)
-    fig_bar.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)', 
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(color=chart_text_color), # Dynamic Color
-        margin=dict(t=20, b=20, l=0, r=0), 
-        height=300,
-        xaxis=dict(showgrid=False), 
-        yaxis=dict(showgrid=True, gridcolor='#eee' if st.session_state.theme == 'Light' else '#333')
-    )
+with c2:
+    st.markdown("<h3 style='color:white; text-align:center;'>Growth Trend</h3>", unsafe_allow_html=True)
     st.plotly_chart(fig_bar, use_container_width=True)
